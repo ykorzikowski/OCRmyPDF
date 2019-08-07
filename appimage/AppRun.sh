@@ -8,6 +8,32 @@ export LD_LIBRARY_PATH="$HERE/usr/lib:$HERE/usr/lib/x86_64-linux-gnu:$LD_LIBRARY
 export TESSDATA_PREFIX="$HERE/usr/share/tesseract-ocr/4.00/tessdata"
 export GS_LIB="$HERE/usr/share/ghostscript/9.26/lib:$HERE/usr/share/ghostscript/9.26/Resource:$HERE/usr/share/ghostscript/9.26/Resource/Init"
 
+usage()
+{
+echo "
+ ==============================================================================
+                           AppImage for OCRmyPDF
+ ==============================================================================
+ OCRmyPDF adds an OCR text layer to scanned PDF files, allowing them to be
+ searched or copy-pasted.
+
+ usage:
+ $ARGV0 [ocrmypdf] [--help] [--list-programs]
+                                  [--list-licenses] [--show-license]
+
+ ocrmypdf                    execute OCRmyPDF
+
+ --help                      show this help message
+
+ --list-programs             list all programs contained in this AppImage
+
+ --list-licenses             list all licenses contained in this AppImage
+
+ --show-license [LICENSE]    show content of license file
+"
+}
+
+
 # Allow the AppImage to be symlinked to e.g., /usr/bin/commandname
 # or called with ./Some*.AppImage commandname ...
 # refer to https://github.com/AppImage/AppImageKit/wiki/Bundling-command-line-tools
@@ -18,30 +44,6 @@ else
   BINARY_NAME=$(basename "$0")
   export APPDIR="$HERE"       # required for the wrapper scripts of linuxdeploy-plugin-python
 fi
-
-usage() {
-echo "
-==============================================================================
-                          AppImage for OCRmyPDF
-==============================================================================
-OCRmyPDF adds an OCR text layer to scanned PDF files, allowing them to be
-searched or copy-pasted.
-
-usage:
-$ARGV0 [ocrmypdf] [--help] [--list-programs]
-                                 [--list-licenses] [--show-license]
-
-ocrmypdf                    execute OCRmyPDF
-
---help                      show this help message
-
---list-programs             list all programs contained in this AppImage
-
---list-licenses             list all licenses contained in this AppImage
-
---show-license [LICENSE]    show content of license file
-"
-}
 
 if [ "$1" == "--help" ] ; then
     usage
