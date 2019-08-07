@@ -88,12 +88,9 @@ pushd jbig2
 make && make install
 popd
 
-pushd "$BUILD_DIR"/AppDir
-# add some tools to AppDir
-#cp -f   /usr/bin/column     ./usr/bin/
-#cp -f   /bin/less           ./usr/bin/
 
 # remove unnecessary data from AppDir
+pushd "$BUILD_DIR"/AppDir
 [ -d bin ] && rm -rf ./bin
 [ -d etc ] && rm -rf ./etc
 [ -d var ] && rm -rf ./var
