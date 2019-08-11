@@ -12,6 +12,7 @@ matrix:
       python: "3.6"
       env:
         - DIST=trusty
+        - MINIMAL=true
       addons: &trusty_apt_minimal
         apt:
           update: true
