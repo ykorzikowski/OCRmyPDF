@@ -13,7 +13,7 @@ matrix:
       env:
         - DIST=trusty
         - MINIMAL=true
-      addons: &trusty_apt_minimal
+      addons:
         apt:
           update: true
           sources:
@@ -42,7 +42,6 @@ matrix:
       env:
         - DIST=trusty
       addons:
-        <<: *trusty_apt_minimal
         apt:
           update: true
           sources:
@@ -50,13 +49,23 @@ matrix:
             - sourceline: "ppa:heyarje/libav-11"
             - sourceline: "ppa:vshn/ghostscript"
           packages:
-            - libexempi3
+            - ghostscript
+            - libavcodec56
+            - libavformat56
+            - libavutil54
+            - libffi-dev
+            - qpdf
+            - tesseract-ocr
+            - tesseract-ocr-deu
+            - tesseract-ocr-eng
+            - tesseract-ocr-fra
+            - libexempi3 # --- optional extras from here ---
             - pngquant
             - poppler-utils
       before_install: |
+        mkdir -p bin packages
         pip3 install --upgrade pip
         pip3 install --upgrade wheel
-        mkdir -p packages
         wget -q 'https://www.dropbox.com/s/vaq0kbwi6e6au80/unpaper_6.1-1.deb?raw=1' -O packages/unpaper_6.1-1.deb
         sudo dpkg -i packages/unpaper_6.1-1.deb
     - os: linux
