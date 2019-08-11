@@ -34,7 +34,6 @@ matrix:
       before_install: |
         pip3 install --upgrade pip
         pip3 install --upgrade wheel
-  include:
     - os: linux
       dist: trusty
       sudo: required
