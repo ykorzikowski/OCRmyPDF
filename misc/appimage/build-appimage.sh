@@ -59,11 +59,10 @@ EOF
 
 # download logo and convert it to desktop icon
 # requires Imagemagick (convert)
-wget https://raw.githubusercontent.com/jbarlow83/OCRmyPDF/master/docs/images/logo-social.png
-convert logo-social.png -resize 512x512\> -size 512x512 xc:white +swap -gravity center -composite ocrmypdf.png
+convert $TRAVIS_BUILD_DIR/docs/images/logo-social.png -resize 512x512\> -size 512x512 xc:white +swap -gravity center -composite ocrmypdf.png
 
 
-# download and intsall packages required by OCRmyPDF
+# download and install packages required by OCRmyPDF
 pushd PackageDir
 packages=(tesseract-ocr tesseract-ocr-all libavformat56 ghostscript qpdf pngquant)
 
