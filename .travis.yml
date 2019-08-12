@@ -101,7 +101,7 @@ matrix:
       install:
         - echo "bypass"
       script:
-        - export OCRMYPDF_VERSION=$(git describe | sed 's_^v__')
+        - export OCRMYPDF_VERSION=$(git describe | sed 's_^v__' | cut -d'-' -f1)
         - bash misc/appimage/build-appimage.sh
         # remove previous installed libraries to ensure that the tests use the libraries of the AppImage
         - sudo apt-get remove libleptonica-dev zlib1g-dev -y
