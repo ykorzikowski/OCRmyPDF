@@ -7,8 +7,8 @@ Download OCRmyPDF*.AppImage, make it executable and run it.
 wget https://github.com/FPille/OCRmyPDF-AppImage/releases/download/continuous/OCRmyPDF-8.3.2-x86_64.AppImage
 chmod +x OCRmyPDF*.AppImage
 ./OCRmyPDF*.AppImage --help
-```  
-  
+```
+
   Beside OCRmyPDF additional command line programs can be run with this AppImage like:
 * ghostscript
 * img2pdf
@@ -16,7 +16,7 @@ chmod +x OCRmyPDF*.AppImage
 * python3.6
 * qpdf
 * tesseract
-* unpaper  
+* unpaper
 
 Just use the program name as first parameter plus options:
 ```
@@ -37,4 +37,3 @@ ln -s OCRmyPDF*.AppImage tesseract
 
 [APPIMAGE]: https://appimage.org
 [OCRMYPDF]: https://github.com/jbarlow83/OCRmyPDF
-
