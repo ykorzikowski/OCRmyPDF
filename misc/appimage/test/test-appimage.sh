@@ -15,7 +15,7 @@ run_appimage()
     echo ""
     ./OCRmyPDF*.AppImage --list-licenses
     echo ""
-    ./OCRmyPDF*.AppImage ocrmypdf -l deu -s -d --jbig2-lossy --optimize 1 "$TRAVIS_BUILD_DIR"/test/test.pdf output.pdf
+    ./OCRmyPDF*.AppImage ocrmypdf -l deu -s -d --jbig2-lossy --optimize 1 tests/resources/aspect.pdf output.pdf
     echo ""
 }
 
@@ -48,6 +48,3 @@ run_appimage
 run_appimagelint
 
 # run_pytest
-
-
-
