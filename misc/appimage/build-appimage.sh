@@ -10,21 +10,17 @@ else
     TEMP_BASE=/tmp
 fi
 
-BUILD_DIR=$(mktemp -d -p "$TEMP_BASE" OCRmyPDF-AppImage-build-XXXXXX)
+APPIMAGE_BUILD_DIR=$(mktemp -d -p "$TEMP_BASE" OCRmyPDF-AppImage-build-XXXXXX)
 
 cleanup () {
-    if [ -d "$BUILD_DIR" ]; then
-        rm -rf "$BUILD_DIR"
+    if [ -d "$APPIMAGE_BUILD_DIR" ]; then
+        rm -rf "$APPIMAGE_BUILD_DIR"
     fi
 }
 
 trap cleanup EXIT
 
-# store repo root as variable
-REPO_ROOT=$(readlink -f "$(dirname "$(dirname "$0")")")
-OLD_CWD=$(readlink -f .)
-
-pushd "$BUILD_DIR"
+pushd "$APPIMAGE_BUILD_DIR"
 
 mkdir -p AppDir
 mkdir -p PackageDir
@@ -73,7 +69,7 @@ done
 
 wget -q 'https://www.dropbox.com/s/vaq0kbwi6e6au80/unpaper_6.1-1.deb?raw=1' -O unpaper_6.1-1.deb
 
-find . -type f -name \*.deb -exec dpkg-deb -X {} "$BUILD_DIR"/AppDir \;
+find . -type f -name \*.deb -exec dpkg-deb -X {} "$APPIMAGE_BUILD_DIR"/AppDir \;
 popd
 
 
@@ -83,11 +79,11 @@ wget -q https://github.com/agl/jbig2enc/archive/0.29.tar.gz -O - | \
      tar xz -C jbig2 --strip-components=1
 pushd jbig2
 ./autogen.sh
-./configure --prefix="$BUILD_DIR"/AppDir/usr
+./configure --prefix="$APPIMAGE_BUILD_DIR"/AppDir/usr
 make && make install
 popd
 
-pushd "$BUILD_DIR"/AppDir
+pushd "$APPIMAGE_BUILD_DIR"/AppDir
 # add some tools to AppDir
 #cp -f   /usr/bin/column     ./usr/bin/
 #cp -f   /bin/less           ./usr/bin/
@@ -100,9 +96,8 @@ popd
 
 
 # export LD_LIBRARY_PATH so that dependencies of shared libraries can be deployed by linuxdeploy-x86_64.AppImage
-export LD_LIBRARY_PATH="$BUILD_DIR/AppDir/usr/lib:$BUILD_DIR/AppDir/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
+export LD_LIBRARY_PATH="$APPIMAGE_BUILD_DIR/AppDir/usr/lib:$APPIMAGE_BUILD_DIR/AppDir/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
 
-#OCRMYPDF_VERSION=8.3.2   # exported in .travis.yml file
 export PIP_REQUIREMENTS="ocrmypdf==$OCRMYPDF_VERSION"
 export VERSION="$OCRMYPDF_VERSION"
 export OUTPUT=OCRmyPDF-"$VERSION"-"$ARCH".AppImage
@@ -110,10 +105,10 @@ export PYTHON_SOURCE=https://www.python.org/ftp/python/3.6.8/Python-3.6.8.tgz
 
 ./linuxdeploy-x86_64.AppImage --appdir AppDir --plugin python \
     -d ocrmypdf.desktop -i ocrmypdf.png \
-    --custom-apprun "$REPO_ROOT"/appimage/AppRun.sh --output appimage
+    --custom-apprun "$TRAVIS_BUILD_DIR"/misc/appimage/AppRun.sh --output appimage
 
 
 # move AppImage back to old CWD
-mv "$OUTPUT" "$OLD_CWD"/
+mv "$OUTPUT" $TRAVIS_BUILD_DIR
 
 popd
