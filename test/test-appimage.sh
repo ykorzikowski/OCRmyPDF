@@ -36,9 +36,9 @@ run_pytest()
     ./OCRmyPDF*.AppImage --appimage-extract
 
     pushd squashfs-root
-    ./AppRun python3 -m pip install pytest
-    ./AppRun python3 -m pip install -r ../OCRmyPDF/requirements/test.txt
-    ./AppRun python3 -m pytest ../OCRmyPDF -n auto
+    ./usr/python/bin/python3.7 -m pip install pytest
+    ./usr/python/bin/python3.7 -m pip install -r ../OCRmyPDF/requirements/test.txt
+    ./usr/python/bin/python3.7 -m pytest ../OCRmyPDF -n auto
     popd
 }
 
@@ -47,7 +47,7 @@ run_appimage
 
 run_appimagelint
 
-# run_pytest
+ run_pytest
 
 
 
