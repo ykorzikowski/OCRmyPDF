@@ -105,7 +105,7 @@ pushd "$BUILD_DIR"/AppDir
 popd
 
 # sanitize the shebangs of local Python scripts
-pushd "$BUILD_DIR"/AppDir/python/bin
+pushd "$BUILD_DIR"/AppDir/usr/python/bin
 find . -type f -perm /111 -exec sed -i '1s|^#!.*\(python[0-9.]*\)|#!/bin/sh\n"exec" "$(dirname $(readlink -f $\{0\}))/../../bin/\1" "$0" "$@"|' {} ";"
 popd
 
