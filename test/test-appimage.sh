@@ -38,7 +38,7 @@ run_pytest()
     pushd squashfs-root
     ./usr/python/bin/python3.7 -m pip install pytest
     ./usr/python/bin/python3.7 -m pip install -r ../OCRmyPDF/requirements/test.txt
-    ./usr/python/bin/python3.7 -m pytest ../OCRmyPDF -n auto
+    ./AppRun python3 -m pytest ../OCRmyPDF -n auto
     popd
 }
 
