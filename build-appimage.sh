@@ -30,14 +30,18 @@ mkdir -p AppDir
 mkdir -p PackageDir
 mkdir -p jbig2
 
-# download linuxdeploy AppImage and linuxdeploy-plugin-python AppImage
+# download linuxdeploy AppImage and python3 AppImage
 wget https://github.com/TheAssassin/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
-# wget https://github.com/niess/linuxdeploy-plugin-python/releases/download/continuous/linuxdeploy-plugin-python-x86_64.AppImage
+wget https://github.com/niess/linuxdeploy-plugin-python/releases/download/continuous/python3-x86_64.AppImage
 
-# use adapted linuxdeploy-plugin-python instead of the original one (otherwise OCRmyPDF breaks)
-wget https://github.com/FPille/linuxdeploy-plugin-python/releases/download/continuous/linuxdeploy-plugin-python-x86_64.AppImage
+chmod +x linuxdeploy*.AppImage python3*.AppImage
 
-chmod +x linuxdeploy*.AppImage
+# extract python3 AppImage, copy usr folder to AppDir and remove pyton3*.AppImage related files
+./python3-x86_64.AppImage --appimage-extract
+cp -a squashfs-root/usr AppDir
+if [ -d AppDir/usr/share/applications ] ; then rm -rf AppDir/usr/share/applications ; fi
+if [ -d AppDir/usr/share/icons ] ; then rm -rf AppDir/usr/share/icons ; fi
+if [ -d AppDir/usr/share/metainfo ] ; then rm -rf AppDir/usr/share/metainfo ; fi
 
 
 ARCH=$(uname -i)
@@ -89,27 +93,32 @@ make && make install
 popd
 
 
-# remove unnecessary data from AppDir
 pushd "$BUILD_DIR"/AppDir
+# remove unnecessary data from AppDir
 [ -d bin ] && rm -rf ./bin
 [ -d etc ] && rm -rf ./etc
 [ -d var ] && rm -rf ./var
+
+# install OCRmyPDF
+./usr/python/bin/python3.7 -m pip install --upgrade pip
+./usr/python/bin/python3.7 -m pip install ocrmypdf=="$OCRMYPDF_VERSION"
+popd
+
+# sanitize the shebangs of local Python scripts
+pushd "$BUILD_DIR"/AppDir/python/bin
+find . -type f -perm /111 -exec sed -i '1s|^#!.*\(python[0-9.]*\)|#!/bin/sh\n"exec" "$(dirname $(readlink -f $\{0\}))/../../bin/\1" "$0" "$@"|' {} ";"
 popd
 
 
 # export LD_LIBRARY_PATH so that dependencies of shared libraries can be deployed by linuxdeploy-x86_64.AppImage
 export LD_LIBRARY_PATH="$BUILD_DIR/AppDir/usr/lib:$BUILD_DIR/AppDir/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
 
-#OCRMYPDF_VERSION=8.3.2   # exported in .travis.yml file
-export PIP_REQUIREMENTS="ocrmypdf==$OCRMYPDF_VERSION"
 export VERSION="$OCRMYPDF_VERSION"
 export OUTPUT=OCRmyPDF-"$VERSION"-"$ARCH".AppImage
-export PYTHON_SOURCE=https://www.python.org/ftp/python/3.6.8/Python-3.6.8.tgz
 
-./linuxdeploy-x86_64.AppImage --appdir AppDir --plugin python \
+./linuxdeploy-x86_64.AppImage --appdir AppDir  \
     -d ocrmypdf.desktop -i ocrmypdf.png \
     --custom-apprun "$REPO_ROOT"/appimage/AppRun.sh --output appimage
-
 
 # move AppImage back to old CWD
 mv "$OUTPUT" "$OLD_CWD"/
