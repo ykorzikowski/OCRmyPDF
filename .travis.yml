@@ -12,7 +12,7 @@ before_install:
   - sudo apt-get install zlib1g-dev -y          # required to build jbig2enc
 
 script:
-  - export OCRMYPDF_VERSION=8.3.2
+  - export OCRMYPDF_VERSION=9.0.1
   - bash build-appimage.sh
   # remove previous installed libraries to ensure that the tests use the libraries of the AppImage
   - sudo apt-get remove libleptonica-dev zlib1g-dev -y
