@@ -69,14 +69,14 @@ convert logo-social.png -resize 512x512\> -size 512x512 xc:white +swap -gravity 
 
 # download and intsall packages required by OCRmyPDF
 pushd PackageDir
-packages=(tesseract-ocr tesseract-ocr-all libavformat56 ghostscript qpdf pngquant)
+packages=(tesseract-ocr tesseract-ocr-all libexempi3 libffi6  ghostscript qpdf pngquant unpaper)
 
 for i in "${packages[@]}"
 do
     apt-get -d -o dir::cache="$PWD" -o Debug::NoLocking=1 --reinstall install "$i" -y
 done
 
-wget -q 'https://www.dropbox.com/s/vaq0kbwi6e6au80/unpaper_6.1-1.deb?raw=1' -O unpaper_6.1-1.deb
+# wget -q 'https://www.dropbox.com/s/vaq0kbwi6e6au80/unpaper_6.1-1.deb?raw=1' -O unpaper_6.1-1.deb
 
 find . -type f -name \*.deb -exec dpkg-deb -X {} "$BUILD_DIR"/AppDir \;
 popd
