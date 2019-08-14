@@ -1,7 +1,7 @@
 
 language: generic
 sudo: required
-dist: trusty
+dist: xenial
 
 before_install:
   - sudo add-apt-repository ppa:heyarje/libav-11 -y
