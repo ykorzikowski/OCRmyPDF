@@ -48,7 +48,7 @@ run_appimage
 
 run_appimagelint
 
-#run_pytest
+run_pytest
 
 
 
