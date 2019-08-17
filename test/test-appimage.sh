@@ -46,7 +46,7 @@ run_pytest()
     # export TESSDATA_PREFIX="$HERE/usr/share/tesseract-ocr/4.00/tessdata"
     # export GS_LIB="$HERE/usr/share/ghostscript/9.26/lib:$HERE/usr/share/ghostscript/9.26/Resource:$HERE/usr/share/ghostscript/9.26/Resource/Init"
 
-    ./AppRun python3 -m pip install -r ../OCRmyPDF/requirements/test.txt
+    ./usr/python/bin/python3 -m pip install -r ../OCRmyPDF/requirements/test.txt
     ./AppRun python3 -m pytest ../OCRmyPDF -n auto
     popd
 }
