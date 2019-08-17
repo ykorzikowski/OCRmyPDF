@@ -33,14 +33,11 @@ run_appimagelint()
 run_pytest()
 {
     git clone --depth=1 --branch "v$OCRMYPDF_VERSION" https://github.com/jbarlow83/OCRmyPDF.git
-    set +x
-    ./OCRmyPDF*.AppImage --appimage-extract
-    set -x
+    ./OCRmyPDF*.AppImage --appimage-extract > /dev/null 2>&1
 
     pushd squashfs-root
-    . ./AppRun
-    ./usr/python/bin/python3 -m pip install -r ../OCRmyPDF/requirements/test.txt
-    ./usr/python/bin/python3 -m pytest ../OCRmyPDF -n auto
+    ./AppRun python3.7 -m pip install -r ../OCRmyPDF/requirements/test.txt
+    ./AppRun python3.7 -m pytest ../OCRmyPDF -n auto
     popd
 }
 

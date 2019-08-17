@@ -37,9 +37,7 @@ wget https://github.com/niess/linuxdeploy-plugin-python/releases/download/contin
 chmod +x linuxdeploy*.AppImage python3*.AppImage
 
 # extract python3 AppImage, copy usr folder to AppDir and remove pyton3*.AppImage related files
-set +x
-./python3-x86_64.AppImage --appimage-extract
-set -x
+./python3-x86_64.AppImage --appimage-extract > /dev/null 2>&1
 cp -a squashfs-root/usr AppDir
 if [ -d AppDir/usr/share/applications ] ; then rm -rf AppDir/usr/share/applications ; fi
 if [ -d AppDir/usr/share/icons ] ; then rm -rf AppDir/usr/share/icons ; fi
