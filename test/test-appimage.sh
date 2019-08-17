@@ -33,7 +33,9 @@ run_appimagelint()
 run_pytest()
 {
     git clone --depth=1 --branch "v$OCRMYPDF_VERSION" https://github.com/jbarlow83/OCRmyPDF.git
+    set +x
     ./OCRmyPDF*.AppImage --appimage-extract
+    set -x
 
     pushd squashfs-root
     . ./AppRun
