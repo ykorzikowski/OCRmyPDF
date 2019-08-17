@@ -47,7 +47,7 @@ run_pytest()
      export GS_LIB="$HERE/usr/share/ghostscript/9.26/lib:$HERE/usr/share/ghostscript/9.26/Resource:$HERE/usr/share/ghostscript/9.26/Resource/Init"
 
     ./usr/python/bin/python3 -m pip install -r ../OCRmyPDF/requirements/test.txt
-    ./usr/python/bin/python3 -m pytest ../OCRmyPDF
+    ./usr/python/bin/python3 -m pytest ../OCRmyPDF -n auto
     popd
 }
 
@@ -56,7 +56,7 @@ run_appimage
 
 run_appimagelint
 
-run_pytest
+#run_pytest
 
 
 
