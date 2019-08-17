@@ -47,7 +47,7 @@ run_pytest()
     # export GS_LIB="$HERE/usr/share/ghostscript/9.26/lib:$HERE/usr/share/ghostscript/9.26/Resource:$HERE/usr/share/ghostscript/9.26/Resource/Init"
 
     ./usr/python/bin/python3 -m pip install -r ../OCRmyPDF/requirements/test.txt
-    ./AppRun python3 -m pytest ../OCRmyPDF -n auto
+    ./AppRun python3 -m pytest ../OCRmyPDF
     popd
 }
 
