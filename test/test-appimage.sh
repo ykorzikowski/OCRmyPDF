@@ -39,7 +39,7 @@ run_pytest()
     cp "$TRAVIS_BUILD_DIR"/test/export.sh .
     source export.sh
     ./usr/python/bin/python3 -m pip install -r ../OCRmyPDF/requirements/test.txt
-    ./usr/python/bin/python3 -m pytest ../OCRmyPDF -n auto
+    ./usr/python/bin/python3 -m pytest ../OCRmyPDF
     popd
 }
 
