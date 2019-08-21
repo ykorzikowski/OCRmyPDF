@@ -30,19 +30,14 @@ mkdir -p AppDir
 mkdir -p PackageDir
 mkdir -p jbig2
 
-# download linuxdeploy AppImage and python3 AppImage
+# download linuxdeploy AppImage and linuxdeploy-plugin-python AppImage
 wget https://github.com/TheAssassin/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
-#wget https://github.com/niess/linuxdeploy-plugin-python/releases/download/continuous/python3-x86_64.AppImage
-wget https://github.com/FPille/linuxdeploy-plugin-python/releases/download/continuous/python3-x86_64.AppImage
+# wget https://github.com/niess/linuxdeploy-plugin-python/releases/download/continuous/linuxdeploy-plugin-python-x86_64.AppImage
 
-chmod +x linuxdeploy*.AppImage python3*.AppImage
+# use adapted linuxdeploy-plugin-python instead of the original one (otherwise OCRmyPDF breaks)
+wget https://github.com/FPille/linuxdeploy-plugin-python/releases/download/continuous/linuxdeploy-plugin-python-x86_64.AppImage
 
-# extract python3 AppImage, copy usr folder to AppDir and remove pyton3*.AppImage related files
-./python3-x86_64.AppImage --appimage-extract > /dev/null 2>&1
-cp -a squashfs-root/usr AppDir
-if [ -d AppDir/usr/share/applications ] ; then rm -rf AppDir/usr/share/applications ; fi
-if [ -d AppDir/usr/share/icons ] ; then rm -rf AppDir/usr/share/icons ; fi
-if [ -d AppDir/usr/share/metainfo ] ; then rm -rf AppDir/usr/share/metainfo ; fi
+chmod +x linuxdeploy*.AppImage
 
 
 ARCH=$(uname -i)
@@ -77,8 +72,6 @@ do
     apt-get -d -o dir::cache="$PWD" -o Debug::NoLocking=1 --reinstall install "$i" -y
 done
 
-# wget -q 'https://www.dropbox.com/s/vaq0kbwi6e6au80/unpaper_6.1-1.deb?raw=1' -O unpaper_6.1-1.deb
-
 find . -type f -name \*.deb -exec dpkg-deb -X {} "$BUILD_DIR"/AppDir \;
 popd
 
@@ -99,25 +92,18 @@ pushd "$BUILD_DIR"/AppDir
 [ -d bin ] && rm -rf ./bin
 [ -d etc ] && rm -rf ./etc
 [ -d var ] && rm -rf ./var
-
-# install OCRmyPDF
-./usr/python/bin/python3.7 -m pip install --upgrade pip
-./usr/python/bin/python3.7 -m pip install ocrmypdf=="$OCRMYPDF_VERSION"
-popd
-
-# sanitize the shebangs of local Python scripts
-pushd "$BUILD_DIR"/AppDir/usr/python/bin
-find . -type f -perm /111 -exec sed -i '1s|^#!.*\(python[0-9.]*\)|#!/bin/sh\n"exec" "$(dirname $(readlink -f $\{0\}))/../../bin/\1" "$0" "$@"|' {} ";"
 popd
 
 
 # export LD_LIBRARY_PATH so that dependencies of shared libraries can be deployed by linuxdeploy-x86_64.AppImage
 export LD_LIBRARY_PATH="$BUILD_DIR/AppDir/usr/lib:$BUILD_DIR/AppDir/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
 
+export PIP_REQUIREMENTS="ocrmypdf==$OCRMYPDF_VERSION"
 export VERSION="$OCRMYPDF_VERSION"
 export OUTPUT=OCRmyPDF-"$VERSION"-"$ARCH".AppImage
+export PYTHON_SOURCE=https://www.python.org/ftp/python/3.7.3/Python-3.7.3.tgz
 
-./linuxdeploy-x86_64.AppImage --appdir AppDir  \
+./linuxdeploy-x86_64.AppImage --appdir AppDir --plugin python \
     -d ocrmypdf.desktop -i ocrmypdf.png \
     --custom-apprun "$REPO_ROOT"/appimage/AppRun.sh --output appimage
 
