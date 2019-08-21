@@ -1,6 +1,6 @@
 #! bin/bash
 
-HERE="$(dirname "$(readlink -f "${0}")")"
+HERE="$PWD"
 
 export APPDIR="$HERE"
 export PATH="$HERE/usr/bin:$HERE/usr/local/bin:$HERE/usr/python/bin:$PATH"
