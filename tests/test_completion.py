@@ -16,8 +16,12 @@
 # along with OCRmyPDF.  If not, see <http://www.gnu.org/licenses/>.
 
 from subprocess import run, PIPE
+import os
 
 import pytest
+
+if 'APPIMAGE_BUILD_DIR' in os.environ:
+    pytest.skip("skipping completions for AppImage", allow_module_level=True)
 
 
 def test_fish():
