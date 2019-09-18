@@ -61,13 +61,13 @@ def v4(tesseract_env=None):
     return version(tesseract_env) >= '4'
 
 
-def has_textonly_pdf(tesseract_env=None):
+def has_textonly_pdf(tesseract_env=None, langs=None):
     """Does Tesseract have textonly_pdf capability?
 
     Available in v4.00.00alpha since January 2017. Best to
-    parse the parameter list
+    parse the parameter list.
     """
-    args_tess = ['tesseract', '--print-parameters', 'pdf']
+    args_tess = tess_base_args(langs, engine_mode=None) + ['--print-parameters', 'pdf']
     params = ''
     try:
         proc = run(
@@ -233,8 +233,8 @@ def _generate_null_hocr(output_hocr, output_sidecar, image):
     the same size as the input image."""
     from PIL import Image
 
-    im = Image.open(image)
-    w, h = im.size
+    with Image.open(image) as im:
+        w, h = im.size
 
     with open(output_hocr, 'w', encoding="utf-8") as f:
         f.write(HOCR_TEMPLATE.format(w, h))
@@ -358,7 +358,7 @@ def generate_pdf(
     if pagesegmode is not None:
         args_tesseract.extend(['--psm', str(pagesegmode)])
 
-    if text_only and has_textonly_pdf(tesseract_env):
+    if text_only and has_textonly_pdf(tesseract_env, language):
         args_tesseract.extend(['-c', 'textonly_pdf=1'])
 
     if user_words:

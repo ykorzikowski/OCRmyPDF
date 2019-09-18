@@ -118,8 +118,8 @@ def test_deskew(spoof_tesseract_noop, resources, outdir):
 
 def test_remove_background(spoof_tesseract_noop, resources, outdir):
     # Ensure the input image does not contain pure white/black
-    im = Image.open(resources / 'congress.jpg')
-    assert im.getextrema() != ((0, 255), (0, 255), (0, 255))
+    with Image.open(resources / 'congress.jpg') as im:
+        assert im.getextrema() != ((0, 255), (0, 255), (0, 255))
 
     output_pdf = check_ocrmypdf(
         resources / 'congress.jpg',
@@ -145,8 +145,8 @@ def test_remove_background(spoof_tesseract_noop, resources, outdir):
     )
 
     # The output image should contain pure white and black
-    im = Image.open(output_png)
-    assert im.getextrema() == ((0, 255), (0, 255), (0, 255))
+    with Image.open(output_png) as im:
+        assert im.getextrema() == ((0, 255), (0, 255), (0, 255))
 
 
 # This will run 5 * 2 * 2 = 20 test cases
@@ -349,10 +349,9 @@ def test_german(spoof_tesseract_cache, resources, outdir):
         sidecar,
         env=spoof_tesseract_cache,
     )
-    print(os.environ)
-    assert (
-        p.returncode == ExitCode.ok
-    ), "This test may fail if Tesseract language packs are missing"
+    if 'deu' not in tesseract.languages():
+        pytest.xfail(reason="tesseract-deu language pack not installed")
+    assert p.returncode == ExitCode.ok, "Requires tesseract deu language pack"
 
 
 def test_klingon(resources, outpdf):
@@ -614,6 +613,7 @@ language_model_penalty_non_freq_dict_word 0
     )
 
 
+@pytest.mark.slow  # This test sometimes times out in CI
 @pytest.mark.parametrize('renderer', RENDERERS)
 def test_tesseract_config_notfound(renderer, resources, outdir):
     cfg_file = outdir / 'nofile.cfg'
@@ -630,6 +630,7 @@ def test_tesseract_config_notfound(renderer, resources, outdir):
     assert p.returncode == ExitCode.ok, err
 
 
+@pytest.mark.slow  # This test sometimes times out in CI
 @pytest.mark.parametrize('renderer', RENDERERS)
 def test_tesseract_config_invalid(renderer, resources, outdir):
     cfg_file = outdir / 'test.cfg'
@@ -652,26 +653,11 @@ THIS FILE IS INVALID
     assert p.returncode == ExitCode.invalid_config
 
 
-@pytest.mark.skipif(tesseract.v4(), reason='arg has no effect in 4.0-beta1')
-def test_user_words(resources, outdir):
+@pytest.mark.skipif(not tesseract.has_user_words(), reason='not functional until 4.1.0')
+def test_user_words_ocr(resources, outdir):
+    # Does not actually test if --user-words causes output to differ
     word_list = outdir / 'wordlist.txt'
-    sidecar_before = outdir / 'sidecar_before.txt'
-    sidecar_after = outdir / 'sidecar_after.txt'
-
-    # Don't know how to make this test pass on various versions and platforms
-    # so weaken to merely testing that the argument is accepted
-    consistent = False
-
-    if consistent:
-        check_ocrmypdf(
-            resources / 'crom.png',
-            outdir / 'out.pdf',
-            '--image-dpi',
-            150,
-            '--sidecar',
-            sidecar_before,
-        )
-        assert 'cromulent' not in sidecar_before.open().read()
+    sidecar_after = outdir / 'sidecar.txt'
 
     with word_list.open('w') as f:
         f.write('cromulent\n')  # a perfectly cromulent word
@@ -686,9 +672,6 @@ def test_user_words(resources, outdir):
         '--user-words',
         word_list,
     )
-
-    if consistent:
-        assert 'cromulent' in sidecar_after.open().read()
 
 
 def test_form_xobject(spoof_tesseract_noop, resources, outpdf):
@@ -810,6 +793,7 @@ def test_compression_preserved(
         assert pdfimage.color == Colorspace.rgb, "Colorspace changed"
     elif im.mode.startswith('L'):
         assert pdfimage.color == Colorspace.gray, "Colorspace changed"
+    im.close()
 
 
 @pytest.mark.parametrize(
@@ -871,6 +855,7 @@ def test_compression_changed(
         assert pdfimage.color == Colorspace.rgb, "Colorspace changed"
     elif im.mode.startswith('L'):
         assert pdfimage.color == Colorspace.gray, "Colorspace changed"
+    im.close()
 
 
 def test_sidecar_pagecount(spoof_tesseract_cache, resources, outpdf):

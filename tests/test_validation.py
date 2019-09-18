@@ -16,13 +16,14 @@
 # along with OCRmyPDF.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, call
 
 import pytest
 
 import ocrmypdf._validation as vd
 from ocrmypdf.api import create_options
 from ocrmypdf.exceptions import MissingDependencyError, BadArgsError
+from ocrmypdf.pdfinfo import PdfInfo
 
 
 def make_opts(input_file='a.pdf', output_file='b.pdf', language='eng', **kwargs):
@@ -37,15 +38,21 @@ def test_hocr_notlatin_warning(caplog):
 
 
 def test_old_ghostscript(caplog):
-    with patch('ocrmypdf.exec.ghostscript.version', return_value='9.19'):
+    with patch('ocrmypdf.exec.ghostscript.version', return_value='9.19'), patch(
+        'ocrmypdf.exec.tesseract.has_textonly_pdf', return_value=True
+    ):
         vd.check_options_output(make_opts(language='chi_sim', output_type='pdfa'))
         assert 'Ghostscript does not work correctly' in caplog.text
 
-    with patch('ocrmypdf.exec.ghostscript.version', return_value='9.18'):
+    with patch('ocrmypdf.exec.ghostscript.version', return_value='9.18'), patch(
+        'ocrmypdf.exec.tesseract.has_textonly_pdf', return_value=True
+    ):
         with pytest.raises(MissingDependencyError):
             vd.check_options_output(make_opts(output_type='pdfa-3'))
 
-    with patch('ocrmypdf.exec.ghostscript.version', return_value='9.24'):
+    with patch('ocrmypdf.exec.ghostscript.version', return_value='9.24'), patch(
+        'ocrmypdf.exec.tesseract.has_textonly_pdf', return_value=True
+    ):
         with pytest.raises(MissingDependencyError):
             vd.check_dependency_versions(make_opts())
 
@@ -113,3 +120,21 @@ def test_report_file_size(tmp_path, caplog):
     os.truncate(out, 50000)
     vd.report_output_file_size(opts, in_, out)
     assert 'No reason' in caplog.text
+
+
+def test_false_action_store_true():
+    opts = make_opts(keep_temporary_files=True)
+    assert opts.keep_temporary_files == True
+    opts = make_opts(keep_temporary_files=False)
+    assert opts.keep_temporary_files == False
+
+
+@pytest.mark.parametrize('progress_bar', [True, False])
+def test_no_progress_bar(progress_bar, resources):
+    opts = make_opts(progress_bar=progress_bar, input_file=(resources / 'trivial.pdf'))
+    with patch('ocrmypdf.pdfinfo.info.tqdm', autospec=True) as tqdmpatch:
+        vd.check_options(opts)
+        pdfinfo = PdfInfo(opts.input_file, progbar=opts.progress_bar)
+        assert tqdmpatch.called
+        _args, kwargs = tqdmpatch.call_args
+        assert kwargs['disable'] != progress_bar

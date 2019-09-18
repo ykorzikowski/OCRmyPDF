@@ -73,6 +73,9 @@ def extract_image_filter(pike, root, log, image, xref):
     if filtdp[0] == Name.JPXDecode:
         return None  # Don't do JPEG2000
 
+    if Name.Decode in image:
+        return None  # Don't mess with custom Decode tables
+
     return pim, filtdp
 
 
@@ -103,6 +106,15 @@ def extract_image_generic(*, pike, root, log, image, xref, options):
     if result is None:
         return None
     pim, filtdp = result
+
+    # Don't try to PNG-optimize 1bpp images, since JBIG2 does it better.
+    if pim.bits_per_component == 1:
+        return None
+
+    try:
+        pim.indexed  # pikepdf 1.6.3 can't handle [/Indexed [/Array...]]
+    except NotImplementedError:
+        return None
 
     if filtdp[0] == Name.DCTDecode and options.optimize >= 2:
         # This is a simple heuristic derived from some training data, that has
@@ -343,6 +355,7 @@ def transcode_jpegs(pike, jpegs, root, log, options):
 
 
 def transcode_pngs(pike, images, image_name_fn, root, log, options):
+    modified = set()
     if options.optimize >= 2:
         png_quality = (
             max(10, options.png_quality - 10),
@@ -363,6 +376,7 @@ def transcode_pngs(pike, images, image_name_fn, root, log, options):
                         png_quality[1],
                     )
                 )
+                modified.add(xref)
             with tqdm(
                 desc="PNGs",
                 total=len(futures),
@@ -372,10 +386,14 @@ def transcode_pngs(pike, images, image_name_fn, root, log, options):
                 for _future in concurrent.futures.as_completed(futures):
                     pbar.update()
 
-    for xref in images:
+    for xref in modified:
         im_obj = pike.get_object(xref, 0)
         try:
-            compdata = leptonica.CompressedData.open(png_name(root, xref))
+            pix = leptonica.Pix.open(png_name(root, xref))
+            if pix.mode == '1':
+                compdata = pix.generate_pdf_ci_data(leptonica.lept.L_G4_ENCODE, 0)
+            else:
+                compdata = leptonica.CompressedData.open(png_name(root, xref))
         except leptonica.LeptonicaError as e:
             # Most likely this means file not found, i.e. quantize did not
             # produce an improved version
@@ -391,62 +409,83 @@ def transcode_pngs(pike, images, image_name_fn, root, log, options):
                 f"{len(compdata)} > {int(im_obj.stream_dict.Length)}"
             )
             continue
+        if compdata.type == leptonica.lept.L_FLATE_ENCODE:
+            return rewrite_png(pike, im_obj, compdata, log)
+        elif compdata.type == leptonica.lept.L_G4_ENCODE:
+            return rewrite_png_as_g4(pike, im_obj, compdata, log)
 
-        # When a PNG is inserted into a PDF, we more or less copy the IDAT section from
-        # the PDF and transfer the rest of the PNG headers to PDF image metadata.
-        # One thing we have to do is tell the PDF reader whether a predictor was used
-        # on the image before Flate encoding. (Typically one is.)
-        # According to Leptonica source, PDF readers don't actually need us
-        # to specify the correct predictor, they just need a value of either:
-        #   1 - no predictor
-        #   10-14 - there is a predictor
-        # Leptonica's compdata->predictor only tells TRUE or FALSE
-        # From there the PNG decoder can infer the rest from the file.
-        # In practice the predictor should be Paeth, 14, so we'll use that.
-        # See:
-        #   - PDF RM 7.4.4.4 Table 10
-        #   - https://github.com/DanBloomberg/leptonica/blob/master/src/pdfio2.c#L757
-        predictor = 14 if compdata.predictor > 0 else 1
-        dparms = Dictionary(Predictor=predictor)
-        if predictor > 1:
-            dparms.BitsPerComponent = compdata.bps  # Yes, this is redundant
-            dparms.Colors = compdata.spp
-            dparms.Columns = compdata.w
 
-        im_obj.BitsPerComponent = compdata.bps
-        im_obj.Width = compdata.w
-        im_obj.Height = compdata.h
+def rewrite_png_as_g4(pike, im_obj, compdata, log):
+    im_obj.BitsPerComponent = 1
+    im_obj.Width = compdata.w
+    im_obj.Height = compdata.h
 
-        if compdata.ncolors > 0:
-            # .ncolors is the number of colors in the palette, not the number of
-            # colors used in a true color image
-            palette_pdf_string = compdata.get_palette_pdf_string()
-            palette_data = pikepdf.Object.parse(palette_pdf_string)
-            palette_stream = pikepdf.Stream(pike, bytes(palette_data))
-            palette = [
-                Name.Indexed,
-                Name.DeviceRGB,
-                compdata.ncolors - 1,
-                palette_stream,
-            ]
-            cs = palette
-        else:
-            if compdata.spp == 1:
-                # PDF interprets binary-1 as black in 1bpp, but PNG sets
-                # black to 0 for 1bpp. Create a palette that informs the PDF
-                # of the mapping - seems cleaner to go this way but pikepdf
-                # needs to be patched to support it.
-                # palette = [Name.Indexed, Name.DeviceGray, 1, b"\xff\x00"]
-                # cs = palette
-                cs = Name.DeviceGray
-            elif compdata.spp == 3:
-                cs = Name.DeviceRGB
-            elif compdata.spp == 4:
-                cs = Name.DeviceCMYK
-        if compdata.bps == 1:
-            im_obj.Decode = [1, 0]  # Bit of a kludge but this inverts photometric too
-        im_obj.ColorSpace = cs
-        im_obj.write(compdata.read(), filter=Name.FlateDecode, decode_parms=dparms)
+    im_obj.write(compdata.read())
+
+    log.debug(f"PNG to G4 {im_obj.objgen}")
+    if Name.Predictor in im_obj:
+        del im_obj.Predictor
+    if Name.DecodeParms in im_obj:
+        del im_obj.DecodeParms
+    im_obj.DecodeParms = Dictionary(
+        K=-1, BlackIs1=bool(compdata.minisblack), Columns=compdata.w
+    )
+
+    im_obj.Filter = Name.CCITTFaxDecode
+    return
+
+
+def rewrite_png(pike, im_obj, compdata, log):
+    # When a PNG is inserted into a PDF, we more or less copy the IDAT section from
+    # the PDF and transfer the rest of the PNG headers to PDF image metadata.
+    # One thing we have to do is tell the PDF reader whether a predictor was used
+    # on the image before Flate encoding. (Typically one is.)
+    # According to Leptonica source, PDF readers don't actually need us
+    # to specify the correct predictor, they just need a value of either:
+    #   1 - no predictor
+    #   10-14 - there is a predictor
+    # Leptonica's compdata->predictor only tells TRUE or FALSE
+    # 10-14 means the actual predictor is specified in the data, so for any
+    # number >= 10 the PDF reader will use whatever the PNG data specifies.
+    # In practice Leptonica should use Paeth, 14, but 15 seems to be the
+    # designated value for "optimal". So we will use 15.
+    # See:
+    #   - PDF RM 7.4.4.4 Table 10
+    #   - https://github.com/DanBloomberg/leptonica/blob/master/src/pdfio2.c#L757
+    predictor = 15 if compdata.predictor > 0 else 1
+    dparms = Dictionary(Predictor=predictor)
+    if predictor > 1:
+        dparms.BitsPerComponent = compdata.bps  # Yes, this is redundant
+        dparms.Colors = compdata.spp
+        dparms.Columns = compdata.w
+
+    im_obj.BitsPerComponent = compdata.bps
+    im_obj.Width = compdata.w
+    im_obj.Height = compdata.h
+
+    log.debug(
+        f"PNG {im_obj.objgen}: palette={compdata.ncolors} spp={compdata.spp} bps={compdata.bps}"
+    )
+    if compdata.ncolors > 0:
+        # .ncolors is the number of colors in the palette, not the number of
+        # colors used in a true color image. The palette string is always
+        # given as RGB tuples even when the image is grayscale; see
+        # https://github.com/DanBloomberg/leptonica/blob/master/src/colormap.c#L2067
+        palette_pdf_string = compdata.get_palette_pdf_string()
+        palette_data = pikepdf.Object.parse(palette_pdf_string)
+        palette_stream = pikepdf.Stream(pike, bytes(palette_data))
+        palette = [Name.Indexed, Name.DeviceRGB, compdata.ncolors - 1, palette_stream]
+        cs = palette
+    else:
+        # ncolors == 0 means we are using a colorspace without a palette
+        if compdata.spp == 1:
+            cs = Name.DeviceGray
+        elif compdata.spp == 3:
+            cs = Name.DeviceRGB
+        elif compdata.spp == 4:
+            cs = Name.DeviceCMYK
+    im_obj.ColorSpace = cs
+    im_obj.write(compdata.read(), filter=Name.FlateDecode, decode_parms=dparms)
 
 
 def optimize(input_file, output_file, context, save_settings):
