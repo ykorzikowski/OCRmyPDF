@@ -1,15 +1,19 @@
 # OCRmyPDF-AppImage  [![Build Status](https://travis-ci.com/FPille/OCRmyPDF-AppImage.svg?branch=master)](https://travis-ci.com/FPille/OCRmyPDF-AppImage)
+
 [AppImage][APPIMAGE] for [OCRmyPDF][OCRMYPDF]
 
 ## Usage
-Download OCRmyPDF*.AppImage, make it executable and run it.
-```
+
+[Download][DOWNLOAD] OCRmyPDF*.AppImage, make it executable and run it.
+
+```bash
 wget https://github.com/FPille/OCRmyPDF-AppImage/releases/download/continuous/OCRmyPDF-8.3.2-x86_64.AppImage
 chmod +x OCRmyPDF*.AppImage
 ./OCRmyPDF*.AppImage --help
 ```
 
   Beside OCRmyPDF additional command line programs can be run with this AppImage like:
+
 * ghostscript
 * img2pdf
 * pngquant
@@ -19,7 +23,8 @@ chmod +x OCRmyPDF*.AppImage
 * unpaper
 
 Just use the program name as first parameter plus options:
-```
+
+```bash
 ./OCRmyPDF*.AppImage tesseract -v
 tesseract 4.1.0
  leptonica-1.76.0
@@ -28,12 +33,13 @@ tesseract 4.1.0
  Found AVX
  Found SSE
 ```
+
 Or create a symlink for the corresponding program:
-```
+
+```bash
 ln -s OCRmyPDF*.AppImage tesseract
 ./tesseract --list-langs
 ```
-
 
 [APPIMAGE]: https://appimage.org
 [OCRMYPDF]: https://github.com/jbarlow83/OCRmyPDF

@@ -33,12 +33,13 @@ run_appimagelint()
 run_pytest()
 {
     git clone --depth=1 --branch "v$OCRMYPDF_VERSION" https://github.com/jbarlow83/OCRmyPDF.git
-    ./OCRmyPDF*.AppImage --appimage-extract
+    ./OCRmyPDF*.AppImage --appimage-extract > /dev/null 2>&1
 
     pushd squashfs-root
-    ./AppRun python3 -m pip install pytest
-    ./AppRun python3 -m pip install -r ../OCRmyPDF/requirements/test.txt
-    ./AppRun python3 -m pytest ../OCRmyPDF -n auto
+    cp "$TRAVIS_BUILD_DIR"/test/export.sh .
+    source export.sh
+    ./usr/python/bin/python3 -m pip install -r ../OCRmyPDF/requirements/test.txt
+    ./usr/python/bin/python3 -m pytest ../OCRmyPDF
     popd
 }
 
@@ -47,4 +48,4 @@ run_appimage
 
 run_appimagelint
 
-# run_pytest
+run_pytest

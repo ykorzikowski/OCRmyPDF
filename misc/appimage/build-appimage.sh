@@ -27,10 +27,10 @@ mkdir -p PackageDir
 mkdir -p jbig2
 
 # download linuxdeploy AppImage and linuxdeploy-plugin-python AppImage
-wget https://github.com/TheAssassin/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
 # wget https://github.com/niess/linuxdeploy-plugin-python/releases/download/continuous/linuxdeploy-plugin-python-x86_64.AppImage
 
-# use adapted linuxdeploy-plugin-python instead of the original one (otherwise OCRmyPDF breaks)
+# use forked linuxdeploy-plugin-python instead of the original one (otherwise OCRmyPDF breaks)
 wget https://github.com/FPille/linuxdeploy-plugin-python/releases/download/continuous/linuxdeploy-plugin-python-x86_64.AppImage
 
 chmod +x linuxdeploy*.AppImage
@@ -60,16 +60,14 @@ convert $TRAVIS_BUILD_DIR/docs/images/logo-social.png -resize 512x512\> -size 51
 
 # download and install packages required by OCRmyPDF
 pushd PackageDir
-packages=(tesseract-ocr tesseract-ocr-all libavformat56 ghostscript qpdf pngquant)
+packages=(tesseract-ocr tesseract-ocr-all libexempi3 libffi6 ghostscript qpdf pngquant unpaper)
 
 for i in "${packages[@]}"
 do
     apt-get -d -o dir::cache="$PWD" -o Debug::NoLocking=1 --reinstall install "$i" -y
 done
 
-wget -q 'https://www.dropbox.com/s/vaq0kbwi6e6au80/unpaper_6.1-1.deb?raw=1' -O unpaper_6.1-1.deb
-
-find . -type f -name \*.deb -exec dpkg-deb -X {} "$APPIMAGE_BUILD_DIR"/AppDir \;
+find . -type f -name \*.deb -exec dpkg-deb -X {} "$BUILD_DIR"/AppDir \;
 popd
 
 
@@ -83,11 +81,8 @@ pushd jbig2
 make && make install
 popd
 
-pushd "$APPIMAGE_BUILD_DIR"/AppDir
-# add some tools to AppDir
-#cp -f   /usr/bin/column     ./usr/bin/
-#cp -f   /bin/less           ./usr/bin/
 
+pushd "$BUILD_DIR"/AppDir
 # remove unnecessary data from AppDir
 [ -d bin ] && rm -rf ./bin
 [ -d etc ] && rm -rf ./etc
@@ -101,14 +96,12 @@ export LD_LIBRARY_PATH="$APPIMAGE_BUILD_DIR/AppDir/usr/lib:$APPIMAGE_BUILD_DIR/A
 export PIP_REQUIREMENTS="ocrmypdf==$OCRMYPDF_VERSION"
 export VERSION="$OCRMYPDF_VERSION"
 export OUTPUT=OCRmyPDF-"$VERSION"-"$ARCH".AppImage
-export PYTHON_SOURCE=https://www.python.org/ftp/python/3.6.8/Python-3.6.8.tgz
 
 ./linuxdeploy-x86_64.AppImage --appdir AppDir --plugin python \
     -d ocrmypdf.desktop -i ocrmypdf.png \
     --custom-apprun "$TRAVIS_BUILD_DIR"/misc/appimage/AppRun.sh --output appimage
 
-
-# move AppImage back to old CWD
+# move AppImage
 mv "$OUTPUT" $TRAVIS_BUILD_DIR
 
 popd
