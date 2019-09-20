@@ -33,7 +33,7 @@ RUN \
 
 RUN python3 -m venv /appenv
 
-COPY . /app
+COPY .  /app
 
 WORKDIR /app
 
