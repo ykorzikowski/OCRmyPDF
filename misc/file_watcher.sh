@@ -2,7 +2,7 @@
 
 do_ocr() {
   if [[  $1 == *'ocr'* ]]; then
-    return
+    exit 0
   fi
 
   /appenv/bin/ocrmypdf $1 $1_ocr.pdf
