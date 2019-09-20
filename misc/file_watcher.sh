@@ -1,12 +1,18 @@
 #!/bin/bash
 
 do_ocr() {
- /appenv/bin/ocrmypdf $1 $1_ocr.pdf
+  if [[  $1 == *'ocr'* ]]; then
+    return
+  fi
 
- rm $1
+  /appenv/bin/ocrmypdf $1 $1_ocr.pdf
+
+  rm $1
 }
+
+export -f do_ocr
 
 while [ true ]; do
   sleep 5
-  find /pdf/ -iname '*.pdf' -type f -exec do_ocr {} \;
+  find /pdf/ -iname '*.pdf' -type f -exec bash -c 'do_ocr "$0"' {} \;
 done
