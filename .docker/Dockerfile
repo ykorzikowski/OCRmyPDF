@@ -67,6 +67,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Copy
 COPY --from=builder /app/misc/webservice.py /app/
+COPY --from=builder /app/misc/file_watcher.sh /app/
 
 # Copy minimal project files to get the test suite.
 COPY --from=builder /app/setup.cfg /app/setup.py /app/README.md /app/
@@ -77,4 +78,4 @@ COPY --from=builder /app/src /app/src
 COPY --from=builder /appenv /appenv
 COPY --from=builder /usr/local /usr/local
 
-ENTRYPOINT ["/appenv/bin/ocrmypdf"]
+ENTRYPOINT ["/app/misc/file_watcher.sh"]
