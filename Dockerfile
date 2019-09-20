@@ -78,4 +78,4 @@ COPY --from=builder /app/src /app/src
 COPY --from=builder /appenv /appenv
 COPY --from=builder /usr/local /usr/local
 
-ENTRYPOINT ["/app/misc/file_watcher.sh"]
+ENTRYPOINT ["/app/file_watcher.sh"]
