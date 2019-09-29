@@ -1,4 +1,4 @@
-e!/bin/bash
+#!/bin/bash
 
 do_ocr() {
   if [[  $1 == *'ocr'* ]]; then
