@@ -1,11 +1,15 @@
-#!/bin/bash
+e!/bin/bash
 
 do_ocr() {
   if [[  $1 == *'ocr'* ]]; then
     return 0
   fi
 
-  /appenv/bin/ocrmypdf "$1" "$1_ocr.pdf"
+  # remove .pdf ending from string
+  filename=$(basename "$1")
+  filename=$(echo $filename|sed 's/\.pdf//g')
+
+  /appenv/bin/ocrmypdf "$1" $(dirname "$1")/"$filename"_ocr.pdf
 
   if [ $? -ne 0 ]; then
     return 0
