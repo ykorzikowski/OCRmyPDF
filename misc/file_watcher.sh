@@ -2,12 +2,16 @@
 
 do_ocr() {
   if [[  $1 == *'ocr'* ]]; then
-    exit 0
+    return 0
   fi
 
-  /appenv/bin/ocrmypdf $1 $1_ocr.pdf
+  /appenv/bin/ocrmypdf "$1" "$1_ocr.pdf"
 
-  rm $1
+  if [ $? -ne 0 ]; then
+    return 0
+  fi
+
+  rm "$1"
 }
 
 export -f do_ocr
