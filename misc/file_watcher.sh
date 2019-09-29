@@ -6,10 +6,10 @@ do_ocr() {
   fi
 
   # remove .pdf ending from string
-  filename=$(basename "$1")
-  filename=$(echo $filename|sed 's/\.pdf//g')
+  filename=$(echo "$filename"|sed 's/\.pdf//g')
+  dirname=$(dirname "$1")
 
-  /appenv/bin/ocrmypdf "$1" $(dirname "$1")/"$filename"_ocr.pdf
+  /appenv/bin/ocrmypdf "$1" "${dirname}/${filename}_ocr.pdf"
 
   if [ $? -ne 0 ]; then
     return 0
