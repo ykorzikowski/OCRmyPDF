@@ -6,8 +6,10 @@ do_ocr() {
   fi
 
   # remove .pdf ending from string
-  filename=$(echo "$filename"|sed 's/\.pdf//g')
+  filename=$(basename "$1"|sed 's/\.pdf//g')
   dirname=$(dirname "$1")
+
+  echo "doing ocr read on '$1' => '${dirname}/${filename}_ocr.pdf'"
 
   /appenv/bin/ocrmypdf "$1" "${dirname}/${filename}_ocr.pdf"
 
