@@ -1,6 +1,6 @@
 # OCRmyPDF
 #
-FROM ubuntu:19.04 as base
+FROM debian:buster as base
 
 FROM base as builder
 
@@ -45,6 +45,8 @@ FROM base
 
 ENV LANG=C.UTF-8
 
+RUN adduser --uid 1000 --disabled-password --home /app pdf
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
   ghostscript \
   img2pdf \
@@ -77,5 +79,9 @@ COPY --from=builder /app/src /app/src
 
 COPY --from=builder /appenv /appenv
 COPY --from=builder /usr/local /usr/local
+
+RUN chown pdf:pdf /app
+
+USER pdf
 
 ENTRYPOINT ["/app/file_watcher.sh"]
