@@ -4,6 +4,7 @@ FROM debian:buster as base
 
 FROM base as builder
 
+ARG UID=1000
 ENV LANG=C.UTF-8
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -45,7 +46,7 @@ FROM base
 
 ENV LANG=C.UTF-8
 
-RUN adduser --uid 1000 --disabled-password --home /app pdf
+RUN adduser --uid $UID --disabled-password --home /app pdf
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
   ghostscript \
