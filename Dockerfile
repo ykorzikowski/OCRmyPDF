@@ -4,7 +4,6 @@ FROM debian:buster as base
 
 FROM base as builder
 
-ARG UID=1000
 ENV LANG=C.UTF-8
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -44,6 +43,7 @@ RUN . /appenv/bin/activate; \
 
 FROM base
 
+ARG UID=1000
 ENV LANG=C.UTF-8
 
 RUN adduser --uid $UID --disabled-password --home /app pdf
