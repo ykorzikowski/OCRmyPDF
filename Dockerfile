@@ -82,6 +82,7 @@ COPY --from=builder /appenv /appenv
 COPY --from=builder /usr/local /usr/local
 
 RUN chown pdf:pdf /app
+RUN chmod -R +x /app
 
 USER pdf
 
